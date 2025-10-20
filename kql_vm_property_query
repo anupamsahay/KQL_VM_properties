@@ -1,0 +1,130 @@
+Resources
+| where type =~ 'microsoft.compute/virtualmachines'
+| extend 
+    // Basic VM Information
+    vmName = name,
+    vmId = properties.vmId,
+    resourceGroup = resourceGroup,
+    location = location,
+    subscriptionId = subscriptionId,
+    
+    // Hardware Profile
+    vmSize = properties.hardwareProfile.vmSize,
+    
+    // OS Profile
+    computerName = properties.osProfile.computerName,
+    adminUsername = properties.osProfile.adminUsername,
+    osType = properties.storageProfile.osDisk.osType,
+    
+    // Storage Profile - OS Disk
+    osDiskName = properties.storageProfile.osDisk.name,
+    osDiskCaching = properties.storageProfile.osDisk.caching,
+    osDiskCreateOption = properties.storageProfile.osDisk.createOption,
+    osDiskSizeGB = properties.storageProfile.osDisk.diskSizeGB,
+    osDiskStorageAccountType = properties.storageProfile.osDisk.managedDisk.storageAccountType,
+    osDiskId = properties.storageProfile.osDisk.managedDisk.id,
+    
+    // Storage Profile - Image Reference
+    imagePublisher = properties.storageProfile.imageReference.publisher,
+    imageOffer = properties.storageProfile.imageReference.offer,
+    imageSku = properties.storageProfile.imageReference.sku,
+    imageVersion = properties.storageProfile.imageReference.version,
+    imageId = properties.storageProfile.imageReference.id,
+    
+    // Data Disks
+    dataDisks = properties.storageProfile.dataDisks,
+    dataDiskCount = array_length(properties.storageProfile.dataDisks),
+    
+    // Network Profile
+    networkInterfaces = properties.networkProfile.networkInterfaces,
+    nicCount = array_length(properties.networkProfile.networkInterfaces),
+    primaryNicId = tostring(properties.networkProfile.networkInterfaces[0].id),
+    
+    // Availability
+    availabilitySetId = properties.availabilitySet.id,
+    availabilityZone = tostring(zones),
+    proximityPlacementGroupId = properties.proximityPlacementGroup.id,
+    
+    // VM State
+    provisioningState = properties.provisioningState,
+    
+    // Licensing
+    licenseType = properties.licenseType,
+    
+    // Security
+    securityProfile = properties.securityProfile,
+    
+    // Boot Diagnostics
+    bootDiagnosticsEnabled = properties.diagnosticsProfile.bootDiagnostics.enabled,
+    bootDiagnosticsStorageUri = properties.diagnosticsProfile.bootDiagnostics.storageUri,
+    
+    // Additional Settings
+    priority = properties.priority,
+    evictionPolicy = properties.evictionPolicy,
+    billingProfile = properties.billingProfile,
+    
+    // Extensions
+    extensionsTimeBudget = properties.extensionsTimeBudget,
+    
+    // Identity
+    identityType = identity.type,
+    identityPrincipalId = identity.principalId,
+    identityTenantId = identity.tenantId,
+    
+    // Plan (for Marketplace images)
+    planName = plan.name,
+    planPublisher = plan.publisher,
+    planProduct = plan.product,
+    
+    // Tags
+    tags = tags,
+    
+    // Timestamps
+    timeCreated = properties.timeCreated
+| project 
+    vmName,
+    vmId,
+    resourceGroup,
+    location,
+    subscriptionId,
+    vmSize,
+    computerName,
+    adminUsername,
+    osType,
+    osDiskName,
+    osDiskCaching,
+    osDiskCreateOption,
+    osDiskSizeGB,
+    osDiskStorageAccountType,
+    osDiskId,
+    imagePublisher,
+    imageOffer,
+    imageSku,
+    imageVersion,
+    imageId,
+    dataDisks,
+    dataDiskCount,
+    networkInterfaces,
+    nicCount,
+    primaryNicId,
+    availabilitySetId,
+    availabilityZone,
+    proximityPlacementGroupId,
+    provisioningState,
+    licenseType,
+    securityProfile,
+    bootDiagnosticsEnabled,
+    bootDiagnosticsStorageUri,
+    priority,
+    evictionPolicy,
+    billingProfile,
+    extensionsTimeBudget,
+    identityType,
+    identityPrincipalId,
+    identityTenantId,
+    planName,
+    planPublisher,
+    planProduct,
+    tags,
+    timeCreated,
+    id
