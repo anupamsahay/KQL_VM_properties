@@ -1,0 +1,128 @@
+Resources
+| where type =~ 'microsoft.compute/virtualmachines'
+| extend 
+    vmName = name,
+    vmId = properties.vmId,
+    resourceGroup = resourceGroup,
+    location = location,
+    subscriptionId = subscriptionId,
+    vmSize = properties.hardwareProfile.vmSize,
+    computerName = properties.osProfile.computerName,
+    adminUsername = properties.osProfile.adminUsername,
+    osType = properties.storageProfile.osDisk.osType,
+    osDiskName = properties.storageProfile.osDisk.name,
+    osDiskCaching = properties.storageProfile.osDisk.caching,
+    osDiskCreateOption = properties.storageProfile.osDisk.createOption,
+    osDiskSizeGB = properties.storageProfile.osDisk.diskSizeGB,
+    osDiskStorageAccountType = properties.storageProfile.osDisk.managedDisk.storageAccountType,
+    osDiskId = properties.storageProfile.osDisk.managedDisk.id,
+    imagePublisher = properties.storageProfile.imageReference.publisher,
+    imageOffer = properties.storageProfile.imageReference.offer,
+    imageSku = properties.storageProfile.imageReference.sku,
+    imageVersion = properties.storageProfile.imageReference.version,
+    imageId = properties.storageProfile.imageReference.id,
+    dataDisks = properties.storageProfile.dataDisks,
+    dataDiskCount = array_length(properties.storageProfile.dataDisks),
+    networkInterfaces = properties.networkProfile.networkInterfaces,
+    nicCount = array_length(properties.networkProfile.networkInterfaces),
+    primaryNicId = tostring(properties.networkProfile.networkInterfaces[0].id),
+    availabilitySetId = properties.availabilitySet.id,
+    availabilityZone = tostring(zones),
+    proximityPlacementGroupId = properties.proximityPlacementGroup.id,
+    provisioningState = properties.provisioningState,
+    licenseType = properties.licenseType,
+    securityProfile = properties.securityProfile,
+    bootDiagnosticsEnabled = properties.diagnosticsProfile.bootDiagnostics.enabled,
+    bootDiagnosticsStorageUri = properties.diagnosticsProfile.bootDiagnostics.storageUri,
+    priority = properties.priority,
+    evictionPolicy = properties.evictionPolicy,
+    billingProfile = properties.billingProfile,
+    extensionsTimeBudget = properties.extensionsTimeBudget,
+    identityType = identity.type,
+    identityPrincipalId = identity.principalId,
+    identityTenantId = identity.tenantId,
+    planName = plan.name,
+    planPublisher = plan.publisher,
+    planProduct = plan.product,
+    tags = tags,
+    timeCreated = properties.timeCreated
+| join kind=leftouter (
+    CostManagementResources
+    | where type == 'microsoft.costmanagement/query'
+    | where properties.timeframe == 'MonthToDate' or properties.timeframe == 'BillingMonthToDate'
+    | mv-expand properties.rows
+    | extend 
+        resourceId = tostring(properties_rows[0]),
+        cost = todouble(properties_rows[1]),
+        currency = tostring(properties_rows[2])
+) on $left.id == $right.resourceId
+| extend
+    // Cost metrics
+    monthlyCost = round(cost, 2),
+    costCurrency = currency,
+    estimatedMonthlyCost = round(cost * 30 / dayofmonth(now()), 2),
+    
+    // Cost tags
+    costCenter = tags['CostCenter'],
+    environment = tags['Environment'],
+    owner = tags['Owner'],
+    project = tags['Project']
+| project 
+    vmName,
+    vmId,
+    resourceGroup,
+    location,
+    subscriptionId,
+    vmSize,
+    
+    // Cost Information
+    monthlyCost,
+    estimatedMonthlyCost,
+    costCurrency,
+    costCenter,
+    environment,
+    owner,
+    project,
+    
+    // Rest of the fields
+    computerName,
+    adminUsername,
+    osType,
+    osDiskName,
+    osDiskCaching,
+    osDiskCreateOption,
+    osDiskSizeGB,
+    osDiskStorageAccountType,
+    osDiskId,
+    imagePublisher,
+    imageOffer,
+    imageSku,
+    imageVersion,
+    imageId,
+    dataDisks,
+    dataDiskCount,
+    networkInterfaces,
+    nicCount,
+    primaryNicId,
+    availabilitySetId,
+    availabilityZone,
+    proximityPlacementGroupId,
+    provisioningState,
+    licenseType,
+    securityProfile,
+    bootDiagnosticsEnabled,
+    bootDiagnosticsStorageUri,
+    priority,
+    evictionPolicy,
+    billingProfile,
+    extensionsTimeBudget,
+    identityType,
+    identityPrincipalId,
+    identityTenantId,
+    planName,
+    planPublisher,
+    planProduct,
+    tags,
+    timeCreated,
+    id
+| order by monthlyCost desc
